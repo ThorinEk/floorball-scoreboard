@@ -76,3 +76,541 @@ input {
   border: 1px solid #ccc;
   text-align: center;
 }
+
+.scoreboard-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-family: 'Arial', sans-serif;
+  background-color: #f0f0f0;
+  padding: 20px;
+  position: relative;
+}
+
+.current-time-wrapper {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.current-time {
+  font-size: 1.2rem;
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 8px 12px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: #333;
+}
+
+.teams-container {
+  display: flex;
+  width: 100%;
+  max-width: 1600px;
+  justify-content: space-between;
+  gap: 20px;
+  height: 100%;
+  padding: 20px 0;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  width: 40%;
+  min-width: 300px;
+  color: white;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.home-team {
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.away-team {
+  color: black;
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+}
+
+.team-settings {
+  display: none;
+}
+
+.team-name-input {
+  font-size: 1.2rem;
+  padding: 5px;
+  width: 150px;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 5px;
+}
+
+.color-picker {
+  width: 100px;
+  height: 30px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.team-name {
+  font-size: 4.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
+  width: 100%;
+  text-transform: uppercase;
+  line-height: 1.1;
+  transition: font-size 0.3s;
+}
+
+.score-controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.score {
+  font-size: 10rem;
+  font-weight: bold;
+  min-width: 160px;
+  text-align: center;
+  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.4);
+  transition: font-size 0.3s;
+}
+
+button {
+  padding: 15px 25px;
+  font-size: 1.5rem;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.1s;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+}
+
+button:hover {
+  background-color: #555;
+  transform: translateY(-2px);
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  background-color: #777;
+  cursor: not-allowed;
+}
+
+.clock-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px 25px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  background-color: #222;
+  color: white;
+  min-width: 350px;
+}
+
+.clock {
+  font-size: 5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  transition: font-size 0.3s;
+}
+
+.clock-edit {
+  display: flex;
+  align-items: center;
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.clock-input {
+  width: 120px;
+  font-size: 4rem;
+  background-color: #444;
+  color: white;
+  border: 2px solid #666;
+  border-radius: 5px;
+  text-align: center;
+  padding: 5px 10px;
+}
+
+.clock-controls {
+  display: flex;
+  gap: 15px;
+}
+
+@media (max-width: 768px) {
+  .teams-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .team {
+    width: 100%;
+  }
+
+  .clock {
+    font-size: 3rem;
+  }
+}
+
+/* Responsive design adjustments */
+@media (max-width: 1400px) {
+  .team-name {
+    font-size: 3.5rem;
+  }
+  
+  .score {
+    font-size: 8rem;
+  }
+  
+  .clock {
+    font-size: 4rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .teams-container {
+    padding: 10px 0;
+  }
+  
+  .team {
+    padding: 20px 15px;
+  }
+  
+  .team-name {
+    font-size: 3rem;
+    margin-bottom: 20px;
+  }
+  
+  .score {
+    font-size: 7rem;
+    min-width: 120px;
+  }
+  
+  .clock {
+    font-size: 3.5rem;
+  }
+  
+  button {
+    padding: 12px 20px;
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .teams-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+  
+  .team {
+    width: 90%;
+    max-width: 600px;
+  }
+  
+  .team-name {
+    font-size: 3.5rem;
+  }
+  
+  .score {
+    font-size: 8rem;
+  }
+  
+  .clock-container {
+    width: 90%;
+    max-width: 600px;
+    order: -1;
+    margin-bottom: 20px;
+  }
+  
+  .current-time-wrapper {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .team-name {
+    font-size: 2.8rem;
+  }
+  
+  .score {
+    font-size: 6rem;
+  }
+  
+  .clock {
+    font-size: 3rem;
+  }
+  
+  .clock-input {
+    width: 100px;
+    font-size: 3rem;
+  }
+  
+  .team-settings {
+    position: relative;
+    top: auto;
+    right: auto;
+    flex-direction: row;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+}
+
+/* iPad-specific optimizations */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  .team-name {
+    font-size: 3.8rem;
+  }
+  
+  .score {
+    font-size: 9rem;
+  }
+  
+  .clock {
+    font-size: 4.5rem;
+  }
+  
+  button {
+    padding: 15px 22px;
+    font-size: 1.4rem;
+  }
+}
+
+/* Landscape mode for tablets and small laptops */
+@media (max-height: 800px) and (min-width: 768px) {
+  .teams-container {
+    padding: 5px 0;
+  }
+  
+  .team {
+    padding: 15px;
+  }
+  
+  .team-name {
+    font-size: 3rem;
+    margin-bottom: 15px;
+  }
+  
+  .score {
+    font-size: 7rem;
+  }
+  
+  .clock {
+    font-size: 3.5rem;
+    margin-bottom: 15px;
+  }
+  
+  .clock-container {
+    padding: 20px;
+  }
+}
+
+/* Full screen mode enhancements */
+@media (display-mode: fullscreen) {
+  .scoreboard-container {
+    padding: 0;
+  }
+  
+  .team-name {
+    font-size: 5rem;
+  }
+  
+  .score {
+    font-size: 12rem;
+  }
+  
+  .clock {
+    font-size: 6rem;
+  }
+}
+
+/* Edit Team Button */
+.edit-team-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: inherit;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.edit-team-btn:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+}
+
+.edit-team-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  animation: modal-appear 0.3s ease-out;
+}
+
+@keyframes modal-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+}
+
+.color-selection {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.color-selection input[type="color"] {
+  width: 60px;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.color-selection span {
+  font-family: monospace;
+  font-size: 1rem;
+  color: #555;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.modal-actions button {
+  padding: 12px 20px;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-btn {
+  background-color: #f1f1f1;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.cancel-btn:hover {
+  background-color: #e5e5e5;
+}
+
+.save-btn {
+  background-color: #3366cc;
+  color: white;
+  border: none;
+}
+
+.save-btn:hover {
+  background-color: #2855b0;
+}
+
+/* Responsive adjustments for modal */
+@media (max-width: 576px) {
+  .modal-content {
+    padding: 20px;
+    width: 95%;
+  }
+  
+  .modal-actions button {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+}
