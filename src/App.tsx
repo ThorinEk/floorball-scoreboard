@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+// Import goal sound
+import goalSound from './assets/sounds/goal.mp3';
 
 interface Team {
   name: string;
@@ -12,6 +14,19 @@ interface EditModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (name: string, color: string) => void;
+}
+
+interface SoundSettings {
+  maxDuration: number;
+  fadeOutDuration: number;
+  volume: number;
+}
+
+interface SettingsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  soundSettings: SoundSettings;
+  onSave: (settings: SoundSettings) => void;
 }
 
 const EditModal: React.FC<EditModalProps> = ({ team, isOpen, onClose, onSave }) => {
@@ -74,6 +89,100 @@ const EditModal: React.FC<EditModalProps> = ({ team, isOpen, onClose, onSave }) 
   );
 };
 
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, soundSettings, onSave }) => {
+  const [maxDuration, setMaxDuration] = useState(soundSettings.maxDuration);
+  const [fadeOutDuration, setFadeOutDuration] = useState(soundSettings.fadeOutDuration);
+  const [volume, setVolume] = useState(soundSettings.volume);
+  
+  // Reset form when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setMaxDuration(soundSettings.maxDuration);
+      setFadeOutDuration(soundSettings.fadeOutDuration);
+      setVolume(soundSettings.volume);
+    }
+  }, [isOpen, soundSettings]);
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      maxDuration,
+      fadeOutDuration,
+      volume
+    });
+  };
+  
+  if (!isOpen) return null;
+  
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>Sound Settings</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="volume-control">Volume</label>
+            <div className="range-control">
+              <input
+                id="volume-control"
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={volume}
+                onChange={(e) => setVolume(Number(e.target.value))}
+              />
+              <span className="range-value">{Math.round(volume * 100)}%</span>
+            </div>
+          </div>
+          <div className="form-group">
+            <label htmlFor="max-duration">Goal Sound Duration (seconds)</label>
+            <div className="range-control">
+              <input
+                id="max-duration"
+                type="range"
+                min="1"
+                max="30"
+                step="1"
+                value={maxDuration}
+                onChange={(e) => setMaxDuration(Number(e.target.value))}
+              />
+              <span className="range-value">{maxDuration}s</span>
+            </div>
+          </div>
+          <div className="form-group">
+            <label htmlFor="fade-duration">Fade Out Duration (seconds)</label>
+            <div className="range-control">
+              <input
+                id="fade-duration"
+                type="range"
+                min="0"
+                max="5"
+                step="0.5"
+                value={fadeOutDuration}
+                onChange={(e) => setFadeOutDuration(Number(e.target.value))}
+              />
+              <span className="range-value">{fadeOutDuration}s</span>
+            </div>
+          </div>
+          <div className="settings-info">
+            <p>The goal celebration sound will play at {Math.round(volume * 100)}% volume for {maxDuration} seconds
+              {fadeOutDuration > 0 ? ` with a ${fadeOutDuration} second fade-out at the end` : ''}.
+            </p>
+          </div>
+          <div className="modal-actions">
+            <button type="button" className="cancel-btn" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="save-btn">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   // Default team settings
   const [homeTeam, setHomeTeam] = useState<Team>({
@@ -102,6 +211,179 @@ const App: React.FC = () => {
   
   // Current time state
   const [currentTime, setCurrentTime] = useState<string>('');
+
+  // Sound state
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fadeInterval = useRef<NodeJS.Timeout | null>(null);
+  
+  // Settings state
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [soundSettings, setSoundSettings] = useState<SoundSettings>(() => {
+    try {
+      // Load settings from localStorage if available
+      const savedSettings = localStorage.getItem('soundSettings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        return {
+          maxDuration: isFinite(parsed.maxDuration) ? parsed.maxDuration : 15,
+          fadeOutDuration: isFinite(parsed.fadeOutDuration) ? parsed.fadeOutDuration : 2,
+          volume: isFinite(parsed.volume) ? Math.min(Math.max(parsed.volume, 0), 1) : 0.7 // Clamp between 0 and 1
+        };
+      }
+    } catch (error) {
+      console.error("Error loading sound settings:", error);
+    }
+    // Default settings if loading fails
+    return {
+      maxDuration: 15, // Default to 15 seconds
+      fadeOutDuration: 2, // Default to 2 second fade out
+      volume: 0.7 // Default to 70% volume
+    };
+  });
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('soundSettings', JSON.stringify(soundSettings));
+    } catch (error) {
+      console.error("Error saving sound settings:", error);
+    }
+  }, [soundSettings]);
+
+  // Initialize audio
+  useEffect(() => {
+    try {
+      audioRef.current = new Audio(goalSound);
+      if (audioRef.current) {
+        // Ensure volume is a valid number between 0 and 1
+        const safeVolume = isFinite(soundSettings.volume) ? 
+          Math.min(Math.max(soundSettings.volume, 0), 1) : 0.7;
+        audioRef.current.volume = safeVolume;
+      }
+    } catch (error) {
+      console.error("Error initializing audio:", error);
+    }
+  }, [soundSettings.volume]);
+
+  // Update audio volume when volume state changes
+  useEffect(() => {
+    try {
+      if (audioRef.current) {
+        // Ensure volume is a valid number between 0 and 1
+        const safeVolume = isFinite(soundSettings.volume) ? 
+          Math.min(Math.max(soundSettings.volume, 0), 1) : 0.7;
+        audioRef.current.volume = safeVolume;
+      }
+    } catch (error) {
+      console.error("Error updating audio volume:", error);
+    }
+  }, [soundSettings.volume]);
+
+  // Clean up function for sound
+  const cleanupSound = () => {
+    try {
+      if (fadeInterval.current) {
+        clearInterval(fadeInterval.current);
+        fadeInterval.current = null;
+      }
+      
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+    } catch (error) {
+      console.error("Error cleaning up sound:", error);
+    }
+  };
+
+  // Play goal sound with duration limit and fade
+  const playGoalSound = () => {
+    try {
+      // Ensure volume is a valid number greater than 0
+      const safeVolume = isFinite(soundSettings.volume) ? 
+        Math.min(Math.max(soundSettings.volume, 0), 1) : 0.7;
+        
+      if (safeVolume > 0 && audioRef.current) {
+        // Clean up any existing playback
+        cleanupSound();
+        
+        // Reset to full volume based on user's setting
+        audioRef.current.volume = safeVolume;
+        
+        // Start playing
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(error => {
+          console.error("Error playing goal sound:", error);
+        });
+        
+        // Get safe values for duration settings
+        const maxDuration = isFinite(soundSettings.maxDuration) ? 
+          Math.max(soundSettings.maxDuration, 1) : 15;
+        const fadeOutDuration = isFinite(soundSettings.fadeOutDuration) ? 
+          Math.min(Math.max(soundSettings.fadeOutDuration, 0), maxDuration) : 2;
+        
+        // Calculate when to start fading out
+        const fadeStartTime = maxDuration - fadeOutDuration;
+        
+        // Set timeout to start the fade out process
+        if (fadeOutDuration > 0) {
+          setTimeout(() => {
+            // Start fade out if the audio is still playing
+            if (audioRef.current && !audioRef.current.paused) {
+              const fadeSteps = 20; // Number of steps for the fade
+              const fadeStepTime = (fadeOutDuration * 1000) / fadeSteps;
+              let currentStep = 0;
+              
+              fadeInterval.current = setInterval(() => {
+                currentStep++;
+                
+                if (currentStep >= fadeSteps || !audioRef.current) {
+                  // End of fade
+                  cleanupSound();
+                } else {
+                  // Calculate new volume for this step
+                  const newVolume = safeVolume * (1 - currentStep / fadeSteps);
+                  if (audioRef.current && isFinite(newVolume)) {
+                    audioRef.current.volume = newVolume;
+                  }
+                }
+              }, fadeStepTime);
+            }
+          }, fadeStartTime * 1000);
+        }
+        
+        // Set timeout to stop the sound after maxDuration
+        setTimeout(() => {
+          cleanupSound();
+        }, maxDuration * 1000);
+      }
+    } catch (error) {
+      console.error("Error playing goal sound:", error);
+    }
+  };
+
+  // Save sound settings
+  const saveSoundSettings = (settings: SoundSettings) => {
+    // Validate and sanitize values before saving
+    const sanitizedSettings = {
+      maxDuration: isFinite(settings.maxDuration) ? 
+        Math.max(settings.maxDuration, 1) : 15,
+      fadeOutDuration: isFinite(settings.fadeOutDuration) ? 
+        Math.min(Math.max(settings.fadeOutDuration, 0), settings.maxDuration) : 2,
+      volume: isFinite(settings.volume) ? 
+        Math.min(Math.max(settings.volume, 0), 1) : 0.7
+    };
+    
+    setSoundSettings(sanitizedSettings);
+    setSettingsModalOpen(false);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupSound();
+    };
+  }, []);
 
   // Interval reference for the timer
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -136,13 +418,15 @@ const App: React.FC = () => {
     setSeconds(0);
   };
 
-  // Increment team score
+  // Increment team score and play sound
   const incrementScore = (team: 'home' | 'away') => {
     if (team === 'home') {
       setHomeTeam(prev => ({ ...prev, score: prev.score + 1 }));
     } else {
       setAwayTeam(prev => ({ ...prev, score: prev.score + 1 }));
     }
+    // Play goal sound when score is incremented
+    playGoalSound();
   };
 
   // Decrement team score (not below 0)
@@ -222,8 +506,17 @@ const App: React.FC = () => {
 
   return (
     <div className="scoreboard-container">
-      <div className="current-time-wrapper">
+      <div className="header-row">
         <div className="current-time">Current time: {currentTime}</div>
+        <button 
+          className="settings-btn" 
+          onClick={() => setSettingsModalOpen(true)}
+          aria-label="Sound settings"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+            <path fill="currentColor" d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+          </svg>
+        </button>
       </div>
       
       <div className="teams-container">
@@ -238,9 +531,11 @@ const App: React.FC = () => {
             </svg>
           </button>
           <div className="team-name">{homeTeam.name}</div>
-          <div className="score-controls">
-            <button onClick={() => decrementScore('home')}>-</button>
+          <div className="score-display">
             <div className="score">{homeTeam.score}</div>
+          </div>
+          <div className="score-controls">
+            <button onClick={() => decrementScore('home')}>−</button>
             <button onClick={() => incrementScore('home')}>+</button>
           </div>
         </div>
@@ -291,9 +586,11 @@ const App: React.FC = () => {
             </svg>
           </button>
           <div className="team-name">{awayTeam.name}</div>
-          <div className="score-controls">
-            <button onClick={() => decrementScore('away')}>-</button>
+          <div className="score-display">
             <div className="score">{awayTeam.score}</div>
+          </div>
+          <div className="score-controls">
+            <button onClick={() => decrementScore('away')}>−</button>
             <button onClick={() => incrementScore('away')}>+</button>
           </div>
         </div>
@@ -312,6 +609,14 @@ const App: React.FC = () => {
         isOpen={awayModalOpen}
         onClose={() => setAwayModalOpen(false)}
         onSave={(name, color) => saveTeamDetails('away', name, color)}
+      />
+      
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        soundSettings={soundSettings}
+        onSave={saveSoundSettings}
       />
     </div>
   );

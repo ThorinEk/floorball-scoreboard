@@ -28,104 +28,84 @@
   gap: 10px;
 }
 
-.scoreboard {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-  max-width: 800px;
-}
-
-.team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 0 20px;
-}
-
-.score {
-  font-size: 4rem;
-  font-weight: bold;
-  margin: 10px 0;
-}
-
-.controls {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-button {
-  padding: 8px 16px;
-  font-size: 1rem;
-  cursor: pointer;
-  background-color: #61dafb;
-  border: none;
-  border-radius: 4px;
-  color: #282c34;
-}
-
-button:hover {
-  background-color: #21a8cb;
-}
-
-input {
-  padding: 8px;
-  font-size: 1rem;
-  margin-top: 10px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  text-align: center;
-}
-
 .scoreboard-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   height: 100vh;
+  width: 100vw;
+  max-width: 100%;
+  max-height: 100%;
   font-family: 'Arial', sans-serif;
   background-color: #f0f0f0;
-  padding: 20px;
   position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 10px;
 }
 
-.current-time-wrapper {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+.header-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  width: 100%;
+  padding: 0 5px 10px 5px;
 }
 
 .current-time {
-  font-size: 1.2rem;
-  font-weight: bold;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 8px 12px;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  font-size: 1rem;
+  font-weight: 500;
   color: #333;
+}
+
+.settings-btn {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: #333;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.settings-btn:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+}
+
+.settings-btn svg {
+  width: 24px;
+  height: 24px;
 }
 
 .teams-container {
   display: flex;
   width: 100%;
-  max-width: 1600px;
   justify-content: space-between;
-  gap: 20px;
-  height: 100%;
-  padding: 20px 0;
+  gap: 10px;
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
 }
 
 .team {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 30px 20px;
+  justify-content: space-between;
+  padding: 20px 10px;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  width: 40%;
+  width: 42%;
   min-width: 300px;
   color: white;
   transition: all 0.3s ease;
@@ -165,42 +145,58 @@ input {
 }
 
 .team-name {
-  font-size: 4.5rem;
+  font-size: 5rem;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   width: 100%;
   text-transform: uppercase;
-  line-height: 1.1;
+  line-height: 1;
   transition: font-size 0.3s;
+}
+
+.score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.score {
+  font-size: 24rem;
+  font-weight: bold;
+  text-align: center;
+  text-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
+  transition: font-size 0.3s;
+  line-height: 0.85;
 }
 
 .score-controls {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.score {
-  font-size: 10rem;
-  font-weight: bold;
-  min-width: 160px;
-  text-align: center;
-  text-shadow: 3px 3px 8px rgba(0, 0, 0, 0.4);
-  transition: font-size 0.3s;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 10px;
+  width: 100%;
 }
 
 button {
-  padding: 15px 25px;
-  font-size: 1.5rem;
+  padding: 20px;
+  font-size: 2rem;
   background-color: #333;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.1s;
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2);
+  width: 45%;
+  max-width: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
 }
 
 button:hover {
@@ -217,16 +213,24 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.score-controls button {
+  font-size: 2.8rem;
+  line-height: 1;
+  padding: 15px;
+}
+
 .clock-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 30px 25px;
+  justify-content: center;
+  padding: 15px 25px;
   border-radius: 15px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   background-color: #222;
   color: white;
-  min-width: 350px;
+  width: 16%;
+  min-width: 200px;
 }
 
 .clock {
@@ -234,31 +238,196 @@ button:disabled {
   font-weight: bold;
   margin-bottom: 20px;
   font-family: 'Courier New', monospace;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  text-shadow: none;
   transition: font-size 0.3s;
-}
-
-.clock-edit {
-  display: flex;
-  align-items: center;
-  font-size: 4rem;
-  margin-bottom: 20px;
-}
-
-.clock-input {
-  width: 120px;
-  font-size: 4rem;
-  background-color: #444;
-  color: white;
-  border: 2px solid #666;
-  border-radius: 5px;
   text-align: center;
-  padding: 5px 10px;
+  padding: 0 15px;
 }
 
 .clock-controls {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  align-items: center;
+}
+
+.clock-controls button {
+  width: 100%;
+}
+
+/* Sound controls */
+.sound-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+}
+
+.sound-toggle-btn,
+.volume-control-btn {
+  position: relative;
+  background-color: rgba(255, 255, 255, 0.3);
+  color: #333;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sound-toggle-btn:hover,
+.volume-control-btn:hover {
+  background-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.1);
+}
+
+.sound-toggle-btn svg,
+.volume-control-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.volume-slider-container {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  padding: 10px;
+  background-color: rgba(34, 34, 34, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.volume-slider {
+  width: 100px;
+  height: 10px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #555;
+  border-radius: 5px;
+  outline: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  border: none;
+}
+
+/* Settings Modal specific styles */
+.range-control {
+  display: flex;
+  align-items: center;
   gap: 15px;
+  margin-top: 5px;
+  width: 100%;
+}
+
+.range-control input[type="range"] {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #ddd;
+  border-radius: 5px;
+  outline: none;
+}
+
+.range-control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3366cc;
+  cursor: pointer;
+}
+
+.range-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3366cc;
+  cursor: pointer;
+}
+
+.range-value {
+  min-width: 40px;
+  text-align: right;
+  font-family: monospace;
+  font-size: 1rem;
+}
+
+.settings-info {
+  margin: 20px 0;
+  padding: 10px;
+  background-color: rgba(51, 102, 204, 0.1);
+  border-left: 3px solid #3366cc;
+  border-radius: 3px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+/* Responsive adjustments for sound controls */
+@media (max-width: 576px) {
+  .sound-toggle-btn,
+  .volume-control-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .sound-toggle-btn svg,
+  .volume-control-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .volume-slider {
+    width: 80px;
+  }
+  
+  .range-control {
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .range-value {
+    min-width: 36px;
+    font-size: 0.85rem;
+  }
+  
+  .settings-info {
+    font-size: 0.8rem;
+  }
+}
+
+/* iPad-specific optimizations */
+@media only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (orientation: landscape) {
+  .sound-toggle-btn,
+  .volume-control-btn {
+    top: 5px;
+    right: 5px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -283,7 +452,7 @@ button:disabled {
   }
   
   .score {
-    font-size: 8rem;
+    font-size: 18rem;
   }
   
   .clock {
@@ -306,7 +475,7 @@ button:disabled {
   }
   
   .score {
-    font-size: 7rem;
+    font-size: 15rem;
     min-width: 120px;
   }
   
@@ -337,7 +506,7 @@ button:disabled {
   }
   
   .score {
-    font-size: 8rem;
+    font-size: 16rem;
   }
   
   .clock-container {
@@ -361,7 +530,7 @@ button:disabled {
   }
   
   .score {
-    font-size: 6rem;
+    font-size: 12rem;
   }
   
   .clock {
@@ -382,25 +551,60 @@ button:disabled {
     justify-content: center;
     margin-bottom: 15px;
   }
+
+  .sound-toggle-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .sound-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 /* iPad-specific optimizations */
 @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+  .scoreboard-container {
+    padding: 5px;
+  }
+  
+  .teams-container {
+    height: calc(100vh - 20px);
+    padding: 0;
+  }
+  
+  .team {
+    padding: 10px 5px;
+  }
+  
   .team-name {
-    font-size: 3.8rem;
+    font-size: 4.5rem;
+    margin-bottom: 5px;
   }
   
   .score {
-    font-size: 9rem;
+    font-size: 22rem;
   }
   
   .clock {
-    font-size: 4.5rem;
+    font-size: 5rem;
+    margin-bottom: 10px;
   }
   
-  button {
-    padding: 15px 22px;
-    font-size: 1.4rem;
+  .current-time-wrapper {
+    top: 5px;
+    right: 5px;
+  }
+  
+  .edit-team-btn {
+    top: 5px;
+    right: 5px;
+  }
+
+  .sound-toggle-btn {
+    top: 5px;
+    right: 5px;
   }
 }
 
@@ -433,6 +637,70 @@ button:disabled {
   }
 }
 
+/* Landscape mode general adjustments */
+@media (orientation: landscape) {
+  .teams-container {
+    flex-direction: row;
+    height: calc(100vh - 50px);
+  }
+  
+  .scoreboard-container {
+    padding: 5px 10px;
+  }
+  
+  .header-row {
+    margin-bottom: 5px;
+  }
+}
+
+/* Smaller landscapes (iPhone in landscape) */
+@media (orientation: landscape) and (max-height: 500px) {
+  .score {
+    font-size: 14rem;
+  }
+  
+  .team-name {
+    font-size: 3rem;
+  }
+  
+  .clock {
+    font-size: 3.5rem;
+  }
+}
+
+/* Very large screens */
+@media (min-width: 1800px) {
+  .score {
+    font-size: 32rem;
+  }
+  
+  .team-name {
+    font-size: 6rem;
+  }
+}
+
+/* Portrait mode general adjustments */
+@media (orientation: portrait) {
+  .teams-container {
+    flex-direction: column;
+    height: calc(100vh - 50px);
+  }
+  
+  .team {
+    width: 100%;
+    height: auto;
+  }
+  
+  .clock-container {
+    width: 100%;
+    order: -1;
+  }
+  
+  .score {
+    font-size: 20rem;
+  }
+}
+
 /* Full screen mode enhancements */
 @media (display-mode: fullscreen) {
   .scoreboard-container {
@@ -444,7 +712,7 @@ button:disabled {
   }
   
   .score {
-    font-size: 12rem;
+    font-size: 28rem;
   }
   
   .clock {
