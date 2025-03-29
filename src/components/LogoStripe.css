@@ -1,0 +1,102 @@
+.logo-stripe-container {
+  width: 100%;
+  overflow: hidden;
+  background-color: #f8f8f8;
+  border-top: 1px solid #ddd;
+  margin-top: 10px;
+  height: 50px;
+  position: relative;
+}
+
+.logo-stripe {
+  position: relative;
+  white-space: nowrap;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.logo-stripe-track {
+  display: inline-flex;
+  align-items: center;
+  animation: scroll-continuous 60s linear infinite; /* Slowed down to half speed: 60s instead of 30s */
+  /* Make the track have 100% min-width to fill the container */
+  min-width: 100%;
+  flex-shrink: 0;
+}
+
+.logo-item {
+  flex: 0 0 auto; /* Prevent logos from shrinking or growing */
+  width: 180px; /* Slightly wider for better spacing */
+  height: 40px;
+  margin: 0 15px; /* Increased margin for better spacing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-item img {
+  max-width: 90%;
+  max-height: 80%;
+  object-fit: contain;
+}
+
+.logo-stripe-loading {
+  height: 50px;
+  background-color: #f8f8f8;
+  background-image: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s ease-in-out infinite;
+}
+
+.logo-stripe-empty {
+  height: 20px;
+  background-color: #f8f8f8;
+}
+
+/* Updated animation to minimize empty space */
+@keyframes scroll-continuous {
+  from {
+    transform: translateX(70%); /* Reduced from 85% to 70% to further decrease empty time */
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .logo-stripe-container {
+    height: 40px;
+  }
+  
+  .logo-item {
+    height: 30px;
+    width: 140px;
+    margin: 0 12px;
+  }
+  
+  .logo-stripe-track {
+    animation-duration: 50s; /* Slowed down to half speed */
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-stripe-track {
+    animation-duration: 40s; /* Slowed down to half speed */
+  }
+  
+  .logo-item {
+    width: 110px;
+    margin: 0 8px;
+  }
+}
