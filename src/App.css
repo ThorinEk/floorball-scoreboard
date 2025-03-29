@@ -1,5 +1,10 @@
 .App {
   text-align: center;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .App-header {
@@ -52,6 +57,9 @@
   flex: 1;
   overflow: hidden;
   margin-bottom: 5px;
+  padding-left: 0;
+  padding-right: 0;
+  box-sizing: border-box;
 }
 
 .header-row {
@@ -998,4 +1006,22 @@ button:disabled {
     padding: 10px 15px;
     font-size: 0.9rem;
   }
+}
+
+/* For any main content containers */
+.container, 
+.content-wrapper {
+  padding-left: 0;
+  padding-right: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Add these if you have content with padding that should be constrained */
+.content-inner {
+  padding-left: 20px;
+  padding-right: 20px;
+  box-sizing: border-box;
+  max-width: 1200px;
+  margin: 0 auto;
 }

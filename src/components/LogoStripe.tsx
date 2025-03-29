@@ -59,36 +59,31 @@ const LogoStripe: React.FC = () => {
       </div>
     ));
     
-    // Calculate how many times we need to repeat the logos to fill the screen
-    // We want to ensure the track is at least double the viewport width
-    const minRepetitions = Math.max(3, Math.ceil(20 / baseLogos.length));
+    // Fill the stripe with enough logos (create many duplicates)
+    // We need enough to fill twice the screen width
+    const minRepetitions = Math.max(10, Math.ceil(60 / baseLogos.length));
     
     const result: ReactElement[] = [];
     
-    // Create multiple sets of logos with unique keys
+    // Safe creation of logo elements with unique keys
     for (let i = 0; i < minRepetitions; i++) {
-      baseLogos.forEach((logo, idx) => {
-        result.push(
-          React.cloneElement(logo, { key: `logo-${i}-${idx}` })
-        );
-      });
+      const currentBatch = baseLogos.map((logo, idx) => 
+        React.cloneElement(logo, { key: `logo-${i}-${idx}` })
+      );
+      result.push(...currentBatch);
     }
     
     return result;
   };
-
-  const logoElements = createLogos();
   
   return (
     <div className="logo-stripe-container">
       <div className="logo-stripe">
-        {/* First track starts at the beginning of the container */}
         <div className="logo-stripe-track">
-          {logoElements}
+          {createLogos()}
         </div>
-        {/* Second track starts after the first, creating continuous flow */}
         <div className="logo-stripe-track">
-          {logoElements}
+          {createLogos()}
         </div>
       </div>
     </div>

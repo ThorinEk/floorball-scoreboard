@@ -1,11 +1,16 @@
 .logo-stripe-container {
   width: 100%;
+  position: relative;
   overflow: hidden;
   background-color: #f8f8f8;
   border-top: 1px solid #ddd;
   margin-top: 10px;
   height: 50px;
-  position: relative;
+  padding: 0;
+  box-sizing: border-box;
+  /* Explicit zero margins to prevent any offset */
+  margin-left: 0;
+  margin-right: 0;
 }
 
 /* The outer wrapper with fixed width */
@@ -21,29 +26,48 @@
 .logo-stripe-track {
   display: inline-flex;
   align-items: center;
-  min-width: 100%; /* Ensure it fills the width */
+  min-width: 100%;
   flex-shrink: 0;
-  padding-left: 0; /* Start with logos visible */
 }
 
-/* First track animation - starts from position 0 */
+/* First track starts visible (no initial transform) */
 .logo-stripe-track:first-child {
-  animation: scroll-first 60s linear infinite;
+  animation: scroll-first 120s linear infinite;
 }
 
-/* Second track animation - starts when first track begins to exit */
+/* Second track starts where it needs to for continuous motion */
 .logo-stripe-track:last-child {
-  animation: scroll-second 60s linear infinite;
+  animation: scroll-second 120s linear infinite;
 }
 
 .logo-item {
   flex: 0 0 auto;
-  width: 180px;
+  width: 160px;
   height: 40px;
-  margin: 0 15px;
+  margin: 0 10px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* First track: start in view, slide left */
+@keyframes scroll-first {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Second track: start at right edge, slide left */
+@keyframes scroll-second {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
 .logo-item img {
@@ -65,26 +89,6 @@
   background-color: #f8f8f8;
 }
 
-/* Animation for the first track - starts immediately */
-@keyframes scroll-first {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-/* Animation for the second track - ensures continuous flow */
-@keyframes scroll-second {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(0);
-  }
-}
-
 @keyframes loading {
   0% {
     background-position: 200% 0;
@@ -102,24 +106,24 @@
   
   .logo-item {
     height: 30px;
-    width: 140px;
-    margin: 0 12px;
+    width: 120px;
+    margin: 0 10px;
   }
   
   .logo-stripe-track:first-child,
   .logo-stripe-track:last-child {
-    animation-duration: 50s;
+    animation-duration: 100s;
   }
 }
 
 @media (max-width: 480px) {
   .logo-stripe-track:first-child,
   .logo-stripe-track:last-child {
-    animation-duration: 40s;
+    animation-duration: 80s;
   }
   
   .logo-item {
-    width: 110px;
+    width: 100px;
     margin: 0 8px;
   }
 }
