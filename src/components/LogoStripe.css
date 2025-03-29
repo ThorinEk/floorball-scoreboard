@@ -8,28 +8,39 @@
   position: relative;
 }
 
+/* The outer wrapper with fixed width */
 .logo-stripe {
   position: relative;
-  white-space: nowrap;
-  width: 100%;
   height: 100%;
+  width: 100%;
   display: flex;
+  overflow: hidden;
 }
 
+/* The inner track that actually moves */
 .logo-stripe-track {
   display: inline-flex;
   align-items: center;
-  animation: scroll-continuous 60s linear infinite; /* Slowed down to half speed: 60s instead of 30s */
-  /* Make the track have 100% min-width to fill the container */
-  min-width: 100%;
+  min-width: 100%; /* Ensure it fills the width */
   flex-shrink: 0;
+  padding-left: 0; /* Start with logos visible */
+}
+
+/* First track animation - starts from position 0 */
+.logo-stripe-track:first-child {
+  animation: scroll-first 60s linear infinite;
+}
+
+/* Second track animation - starts when first track begins to exit */
+.logo-stripe-track:last-child {
+  animation: scroll-second 60s linear infinite;
 }
 
 .logo-item {
-  flex: 0 0 auto; /* Prevent logos from shrinking or growing */
-  width: 180px; /* Slightly wider for better spacing */
+  flex: 0 0 auto;
+  width: 180px;
   height: 40px;
-  margin: 0 15px; /* Increased margin for better spacing */
+  margin: 0 15px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,13 +65,23 @@
   background-color: #f8f8f8;
 }
 
-/* Updated animation to minimize empty space */
-@keyframes scroll-continuous {
-  from {
-    transform: translateX(70%); /* Reduced from 85% to 70% to further decrease empty time */
+/* Animation for the first track - starts immediately */
+@keyframes scroll-first {
+  0% {
+    transform: translateX(0);
   }
-  to {
+  100% {
     transform: translateX(-100%);
+  }
+}
+
+/* Animation for the second track - ensures continuous flow */
+@keyframes scroll-second {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
   }
 }
 
@@ -85,14 +106,16 @@
     margin: 0 12px;
   }
   
-  .logo-stripe-track {
-    animation-duration: 50s; /* Slowed down to half speed */
+  .logo-stripe-track:first-child,
+  .logo-stripe-track:last-child {
+    animation-duration: 50s;
   }
 }
 
 @media (max-width: 480px) {
-  .logo-stripe-track {
-    animation-duration: 40s; /* Slowed down to half speed */
+  .logo-stripe-track:first-child,
+  .logo-stripe-track:last-child {
+    animation-duration: 40s;
   }
   
   .logo-item {

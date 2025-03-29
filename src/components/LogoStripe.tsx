@@ -9,7 +9,7 @@ interface Logo {
 const LogoStripe: React.FC = () => {
   const [logos, setLogos] = useState<Logo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   useEffect(() => {
     // Fetch logos from the public/logos directory
     const fetchLogos = async () => {
@@ -45,42 +45,50 @@ const LogoStripe: React.FC = () => {
   if (logos.length === 0) {
     return <div className="logo-stripe-empty"></div>;
   }
-
-  // Create enough logos to fill the track
-  const getLogos = () => {
-    // Create logo elements
-    const logoElements = logos.map((logo, index) => (
-      <div key={`logo-${index}`} className="logo-item">
-        <img src={logo.path} alt={logo.name} title={logo.name} />
+  
+  // Create logo elements with proper spacing and sizing
+  const createLogos = (): ReactElement[] => {
+    // Create base logo elements
+    const baseLogos = logos.map((logo, index) => (
+      <div key={`base-${index}`} className="logo-item">
+        <img 
+          src={logo.path} 
+          alt={logo.name} 
+          title={logo.name}
+        />
       </div>
     ));
     
-    // Use a fixed number of repetitions instead of a while loop
-    // to avoid the "unsafe references" error
-    const minimumCount = 30;
-    const repetitions = Math.max(2, Math.ceil(minimumCount / logoElements.length));
+    // Calculate how many times we need to repeat the logos to fill the screen
+    // We want to ensure the track is at least double the viewport width
+    const minRepetitions = Math.max(3, Math.ceil(20 / baseLogos.length));
     
-    // Create the final array with correct keys
-    const items: ReactElement[] = [];
-    for (let i = 0; i < repetitions; i++) {
-      const offset = i * logoElements.length;
-      logoElements.forEach((item, idx) => {
-        items.push(React.cloneElement(item, { key: `logo-${offset + idx}` }));
+    const result: ReactElement[] = [];
+    
+    // Create multiple sets of logos with unique keys
+    for (let i = 0; i < minRepetitions; i++) {
+      baseLogos.forEach((logo, idx) => {
+        result.push(
+          React.cloneElement(logo, { key: `logo-${i}-${idx}` })
+        );
       });
     }
     
-    return items;
+    return result;
   };
+
+  const logoElements = createLogos();
   
   return (
     <div className="logo-stripe-container">
       <div className="logo-stripe">
-        {/* Two duplicate tracks to ensure continuous flow */}
+        {/* First track starts at the beginning of the container */}
         <div className="logo-stripe-track">
-          {getLogos()}
+          {logoElements}
         </div>
+        {/* Second track starts after the first, creating continuous flow */}
         <div className="logo-stripe-track">
-          {getLogos()}
+          {logoElements}
         </div>
       </div>
     </div>
