@@ -580,54 +580,57 @@ const App: React.FC = () => {
       timerRef.current = null;
     }
     
-    // Update state immediately
+    // Update state immediately to show the game over UI right away
     setIsRunning(false);
     setGameEnded(true);
     setWinningTeam(winner);
     
-    // In goal-limited mode, we only play the goal sound, not the end horn
-    // The goal sound is already playing from the incrementScore function
+    // Note: We don't play any sound here - that's handled in incrementScore
   }, []);
   
-  // Modified incrementScore function with better sound handling
+  // Modified incrementScore function with better state and sound handling
   const incrementScore = (team: 'home' | 'away') => {
     if (gameEnded) return;
     
     let newScore = 0;
     let winner: string | null = null;
+    let isWinningGoal = false;
     
     // Update the score
     if (team === 'home') {
       newScore = homeTeam.score + 1;
-      setHomeTeam(prev => ({ ...prev, score: newScore }));
       
       // Check if this is the winning goal
       if (gameSettings.gameMode === GameMode.GOAL_BASED && newScore >= gameSettings.goalLimit) {
         winner = homeTeam.name;
+        isWinningGoal = true;
       }
+      
+      // Always update the score immediately
+      setHomeTeam(prev => ({ ...prev, score: newScore }));
     } else {
       newScore = awayTeam.score + 1;
-      setAwayTeam(prev => ({ ...prev, score: newScore }));
       
       // Check if this is the winning goal
       if (gameSettings.gameMode === GameMode.GOAL_BASED && newScore >= gameSettings.goalLimit) {
         winner = awayTeam.name;
+        isWinningGoal = true;
       }
+      
+      // Always update the score immediately
+      setAwayTeam(prev => ({ ...prev, score: newScore }));
     }
     
-    // Always play the goal sound
-    if (winner) {
-      // This is a winning goal - ensure the sound plays FULLY before ending game
-      const winnerName = winner; // Local variable to avoid capture issues
+    // If this is a winning goal, end the game immediately BEFORE playing the sound
+    if (isWinningGoal && winner) {
+      // First update the UI state to show game over
+      endGameByGoal(winner);
       
-      // Play goal sound - even if another sound was playing (this ensures we hear the winning goal)
-      playGoalSound(() => {
-        // This callback runs after goal sound is done
-        console.log("Goal sound finished, now ending game");
-        setTimeout(() => {
-          endGameByGoal(winnerName);
-        }, 300); // Small additional delay for stability
-      });
+      // Then play the sound after UI is updated
+      // This ensures the UI doesn't lag during sound playback
+      setTimeout(() => {
+        playGoalSound();
+      }, 50); // Small delay to ensure UI renders first
     } else {
       // Regular goal, just play the sound
       playGoalSound();
