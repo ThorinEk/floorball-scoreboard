@@ -537,12 +537,12 @@ const App: React.FC = () => {
     playGoalSound();
   };
 
-  const endGame = (winner: string | null) => {
+  const endGame = useCallback((winner: string | null) => {
     setIsRunning(false);
     setGameEnded(true);
     setWinningTeam(winner);
     playEndHorn();
-  };
+  }, [playEndHorn]);
 
   const decrementScore = (team: 'home' | 'away') => {
     if (gameEnded) return;
