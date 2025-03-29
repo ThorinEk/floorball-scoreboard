@@ -243,11 +243,12 @@ button:disabled {
   justify-content: center;
   padding: 15px 25px;
   border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  background-color: #222;
-  color: white;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 3px solid #333;
+  color: #222;
   width: 16%;
   min-width: 200px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .clock {
@@ -255,10 +256,11 @@ button:disabled {
   font-weight: bold;
   margin-bottom: 20px;
   font-family: 'Courier New', monospace;
-  text-shadow: none;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
   transition: font-size 0.3s;
   text-align: center;
   padding: 0 15px;
+  color: #222;
 }
 
 .clock-controls {
@@ -271,6 +273,12 @@ button:disabled {
 
 .clock-controls button {
   width: 100%;
+  background-color: #333;
+  color: white;
+}
+
+.clock-controls button:hover {
+  background-color: #555;
 }
 
 /* Sound controls */
@@ -562,7 +570,6 @@ button:disabled {
   }
 }
 
-/* Responsive design adjustments */
 @media (max-width: 1400px) {
   .team-name {
     font-size: 3rem;
@@ -639,6 +646,8 @@ button:disabled {
     max-width: 600px;
     order: -1;
     margin-bottom: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border: 3px solid #333;
   }
   
   .current-time-wrapper {
@@ -759,6 +768,7 @@ button:disabled {
   
   .clock-container {
     padding: 20px;
+    border-width: 2px;
   }
 }
 
