@@ -345,16 +345,130 @@ const App: React.FC = () => {
   const [gameEnded, setGameEnded] = useState<boolean>(false);
   const [winningTeam, setWinningTeam] = useState<string | null>(null);
 
-  // Sound state
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const endHornRef = useRef<HTMLAudioElement | null>(null);
-  const fadeInterval = useRef<NodeJS.Timeout | null>(null);
-  
   // Add timer ref declaration
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Settings state
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  
+  // Sound refs - simple approach
+  const goalAudioRef = useRef<HTMLAudioElement | null>(null);
+  const hornAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Create audio elements directly in the DOM for better browser compatibility
+  useEffect(() => {
+    // Create audio elements if they don't exist
+    if (!document.getElementById('goalSound')) {
+      const goalEl = document.createElement('audio');
+      goalEl.id = 'goalSound';
+      goalEl.src = goalSound;
+      goalEl.preload = 'auto';
+      document.body.appendChild(goalEl);
+      goalAudioRef.current = goalEl;
+    } else {
+      goalAudioRef.current = document.getElementById('goalSound') as HTMLAudioElement;
+    }
+    
+    if (!document.getElementById('hornSound')) {
+      const hornEl = document.createElement('audio');
+      hornEl.id = 'hornSound';
+      hornEl.src = endHornSound;
+      hornEl.preload = 'auto';
+      document.body.appendChild(hornEl);
+      hornAudioRef.current = hornEl;
+    } else {
+      hornAudioRef.current = document.getElementById('hornSound') as HTMLAudioElement;
+    }
+    
+    // Update volume when settings change
+    const safeVolume = isFinite(gameSettings.soundSettings.volume) ? 
+      Math.min(Math.max(gameSettings.soundSettings.volume, 0), 1) : 0.7;
+      
+    if (goalAudioRef.current) goalAudioRef.current.volume = safeVolume;
+    if (hornAudioRef.current) hornAudioRef.current.volume = safeVolume;
+    
+    // Clean up on unmount
+    return () => {
+      const goalEl = document.getElementById('goalSound');
+      const hornEl = document.getElementById('hornSound');
+      if (goalEl) document.body.removeChild(goalEl);
+      if (hornEl) document.body.removeChild(hornEl);
+    };
+  }, [gameSettings.soundSettings.volume]);
+  
+  // Basic play sound function - reliable approach
+  const playSound = useCallback((audioElement: HTMLAudioElement | null) => {
+    if (!audioElement) return;
+    
+    // Reset and play
+    try {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      
+      // Promise to track when audio starts playing
+      const playPromise = audioElement.play();
+      
+      // Handle play promise to avoid "play() request was interrupted" errors
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error("Play interrupted", error);
+        });
+      }
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  }, []);
+  
+  // Simple goal sound function
+  const playGoalSound = useCallback(() => {
+    console.log("Attempting to play goal sound");
+    playSound(goalAudioRef.current);
+  }, [playSound]);
+  
+  // Simple end horn function
+  const playEndHorn = useCallback(() => {
+    console.log("Attempting to play end horn");
+    playSound(hornAudioRef.current);
+  }, [playSound]);
+  
+  // Function to end the game when time runs out
+  const endGameByTime = useCallback(() => {
+    console.log("Game ended by time");
+    
+    // Stop the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Update game state
+    setIsRunning(false);
+    setGameEnded(true);
+    
+    // Determine winner
+    const winner = homeTeam.score > awayTeam.score ? homeTeam.name : 
+                 awayTeam.score > homeTeam.score ? awayTeam.name : null;
+    setWinningTeam(winner);
+    
+    // Play sound
+    playEndHorn();
+  }, [homeTeam.score, homeTeam.name, awayTeam.score, awayTeam.name, playEndHorn]);
+  
+  // Function to end the game when goal limit is reached
+  const endGameByGoal = useCallback((winner: string) => {
+    console.log("Game ended by goal limit", winner);
+    
+    // Stop the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Update state immediately - this works fine with sounds playing
+    setIsRunning(false);
+    setGameEnded(true);
+    setWinningTeam(winner);
+  }, []);
   
   // Save settings to localStorage when they change
   useEffect(() => {
@@ -364,46 +478,6 @@ const App: React.FC = () => {
       console.error("Error saving game settings:", error);
     }
   }, [gameSettings]);
-
-  // Initialize audio
-  useEffect(() => {
-    try {
-      audioRef.current = new Audio(goalSound);
-      endHornRef.current = new Audio(endHornSound);
-      
-      if (audioRef.current && endHornRef.current) {
-        // Ensure volume is a valid number between 0 and 1
-        const safeVolume = isFinite(gameSettings.soundSettings.volume) ? 
-          Math.min(Math.max(gameSettings.soundSettings.volume, 0), 1) : 0.7;
-        audioRef.current.volume = safeVolume;
-        endHornRef.current.volume = safeVolume;
-      }
-    } catch (error) {
-      console.error("Error initializing audio:", error);
-    }
-  }, [gameSettings.soundSettings.volume]);
-
-  // Clean up function for sound - wrap in useCallback
-  const cleanupSound = useCallback(() => {
-    try {
-      if (fadeInterval.current) {
-        clearInterval(fadeInterval.current);
-        fadeInterval.current = null;
-      }
-      
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-      
-      if (endHornRef.current) {
-        endHornRef.current.pause();
-        endHornRef.current.currentTime = 0;
-      }
-    } catch (error) {
-      console.error("Error cleaning up sound:", error);
-    }
-  }, []);
 
   // Update current time
   useEffect(() => {
@@ -422,77 +496,6 @@ const App: React.FC = () => {
     
     return () => clearInterval(timeInterval);
   }, []);
-
-  // Play sounds
-  const playGoalSound = useCallback(() => {
-    try {
-      const safeVolume = isFinite(gameSettings.soundSettings.volume) ? 
-        Math.min(Math.max(gameSettings.soundSettings.volume, 0), 1) : 0.7;
-      
-      if (safeVolume > 0 && audioRef.current) {
-        cleanupSound();
-        audioRef.current.volume = safeVolume;
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(error => {
-          console.error("Error playing goal sound:", error);
-        });
-        
-        const maxDuration = isFinite(gameSettings.soundSettings.maxDuration) ? 
-          Math.max(gameSettings.soundSettings.maxDuration, 1) : 15;
-        const fadeOutDuration = isFinite(gameSettings.soundSettings.fadeOutDuration) ? 
-          Math.min(Math.max(gameSettings.soundSettings.fadeOutDuration, 0), maxDuration) : 2;
-        
-        const fadeStartTime = maxDuration - fadeOutDuration;
-        
-        if (fadeOutDuration > 0) {
-          setTimeout(() => {
-            if (audioRef.current && !audioRef.current.paused) {
-              const fadeSteps = 20;
-              const fadeStepTime = (fadeOutDuration * 1000) / fadeSteps;
-              let currentStep = 0;
-              
-              fadeInterval.current = setInterval(() => {
-                currentStep++;
-                
-                if (currentStep >= fadeSteps || !audioRef.current) {
-                  cleanupSound();
-                } else {
-                  const newVolume = safeVolume * (1 - currentStep / fadeSteps);
-                  if (audioRef.current && isFinite(newVolume)) {
-                    audioRef.current.volume = newVolume;
-                  }
-                }
-              }, fadeStepTime);
-            }
-          }, fadeStartTime * 1000);
-        }
-        
-        setTimeout(() => {
-          cleanupSound();
-        }, maxDuration * 1000);
-      }
-    } catch (error) {
-      console.error("Error playing goal sound:", error);
-    }
-  }, [cleanupSound, gameSettings.soundSettings]);
-
-  const playEndHorn = useCallback(() => {
-    try {
-      const safeVolume = isFinite(gameSettings.soundSettings.volume) ? 
-        Math.min(Math.max(gameSettings.soundSettings.volume, 0), 1) : 0.7;
-        
-      if (safeVolume > 0 && endHornRef.current) {
-        cleanupSound();
-        endHornRef.current.volume = safeVolume;
-        endHornRef.current.currentTime = 0;
-        endHornRef.current.play().catch(error => {
-          console.error("Error playing end horn sound:", error);
-        });
-      }
-    } catch (error) {
-      console.error("Error playing end horn sound:", error);
-    }
-  }, [cleanupSound, gameSettings.soundSettings.volume]);
 
   const toggleClock = () => {
     setIsRunning(!isRunning);
@@ -518,31 +521,42 @@ const App: React.FC = () => {
   const incrementScore = (team: 'home' | 'away') => {
     if (gameEnded) return;
     
+    let newScore = 0;
+    let winner: string | null = null;
+    
+    // Update the score
     if (team === 'home') {
-      const newScore = homeTeam.score + 1;
+      newScore = homeTeam.score + 1;
       setHomeTeam(prev => ({ ...prev, score: newScore }));
       
+      // Check if this is the winning goal
       if (gameSettings.gameMode === GameMode.GOAL_BASED && newScore >= gameSettings.goalLimit) {
-        endGame(homeTeam.name);
+        winner = homeTeam.name;
       }
     } else {
-      const newScore = awayTeam.score + 1;
+      newScore = awayTeam.score + 1;
       setAwayTeam(prev => ({ ...prev, score: newScore }));
       
+      // Check if this is the winning goal
       if (gameSettings.gameMode === GameMode.GOAL_BASED && newScore >= gameSettings.goalLimit) {
-        endGame(awayTeam.name);
+        winner = awayTeam.name;
       }
     }
     
+    // Always play the goal sound
     playGoalSound();
+    
+    // End the game if limit reached - will work even if sound is playing
+    if (winner) {
+      // Store the winner in a local constant to avoid type issues with the setTimeout callback
+      const winnerName = winner; // This is guaranteed to be a string here
+      
+      // Small delay to ensure state is updated properly
+      setTimeout(() => {
+        endGameByGoal(winnerName);
+      }, 100);
+    }
   };
-
-  const endGame = useCallback((winner: string | null) => {
-    setIsRunning(false);
-    setGameEnded(true);
-    setWinningTeam(winner);
-    playEndHorn();
-  }, [playEndHorn]);
 
   const decrementScore = (team: 'home' | 'away') => {
     if (gameEnded) return;
@@ -615,8 +629,8 @@ const App: React.FC = () => {
             if (prevSeconds === 0) {
               setMinutes(prevMinutes => {
                 if (prevMinutes === 0) {
-                  endGame(null);
-                  if (timerRef.current) clearInterval(timerRef.current);
+                  // Time is up
+                  endGameByTime();
                   return 0;
                 }
                 return prevMinutes - 1;
@@ -642,7 +656,7 @@ const App: React.FC = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isRunning, gameEnded, minutes, gameSettings.gameMode, endGame]);
+  }, [isRunning, gameEnded, minutes, gameSettings.gameMode, endGameByTime]);
 
   const getClockDisplay = () => {
     if (gameSettings.gameMode === GameMode.TIME_BASED) {
@@ -744,17 +758,17 @@ const App: React.FC = () => {
               </div>
             ) : (
               <div className={`clock ${gameEnded ? 'game-ended' : ''}`}>
+                <div className="clock-time">
+                  {getClockDisplay()}
+                </div>
                 {gameEnded ? (
                   getGameStatusDisplay()
                 ) : (
-                  <>
-                    {getClockDisplay()}
-                    {gameSettings.gameMode === GameMode.GOAL_BASED && (
-                      <div className="goal-limit-info">
-                        First to {gameSettings.goalLimit} wins
-                      </div>
-                    )}
-                  </>
+                  gameSettings.gameMode === GameMode.GOAL_BASED && (
+                    <div className="goal-limit-info">
+                      First to {gameSettings.goalLimit} wins
+                    </div>
+                  )
                 )}
               </div>
             )}
