@@ -355,6 +355,14 @@ const App: React.FC = () => {
   const goalAudioRef = useRef<HTMLAudioElement | null>(null);
   const hornAudioRef = useRef<HTMLAudioElement | null>(null);
   
+  // Track active audio playback with more details
+  const audioStateRef = useRef({
+    goalPlaying: false,
+    goalFadeOutTimer: null as NodeJS.Timeout | null,
+    goalFadeInterval: null as NodeJS.Timeout | null,
+    endHornPlaying: false
+  });
+  
   // Create audio elements directly in the DOM for better browser compatibility
   useEffect(() => {
     // Create audio elements if they don't exist
@@ -396,14 +404,20 @@ const App: React.FC = () => {
     };
   }, [gameSettings.soundSettings.volume]);
   
-  // Basic play sound function - reliable approach
-  const playSound = useCallback((audioElement: HTMLAudioElement | null) => {
+  // Improved play sound function with better cleanup
+  const playSound = useCallback((audioElement: HTMLAudioElement | null, duration?: number, onComplete?: () => void) => {
     if (!audioElement) return;
     
     // Reset and play
     try {
+      // Always reset the sound state first
       audioElement.pause();
       audioElement.currentTime = 0;
+      
+      // Reset volume to the setting value before each play
+      const safeVolume = isFinite(gameSettings.soundSettings.volume) ? 
+        Math.min(Math.max(gameSettings.soundSettings.volume, 0), 1) : 0.7;
+      audioElement.volume = safeVolume;
       
       // Promise to track when audio starts playing
       const playPromise = audioElement.play();
@@ -412,23 +426,125 @@ const App: React.FC = () => {
       if (playPromise !== undefined) {
         playPromise.catch(error => {
           console.error("Play interrupted", error);
+          // If there was an error, call the completion handler anyway
+          if (onComplete) onComplete();
         });
+      }
+      
+      // If duration is provided, stop the sound after that time
+      if (duration && isFinite(duration) && duration > 0) {
+        const timer = setTimeout(() => {
+          if (audioElement) {
+            audioElement.pause();
+            audioElement.currentTime = 0;
+            
+            // Reset volume after playing
+            audioElement.volume = safeVolume;
+            
+            if (onComplete) onComplete();
+          }
+        }, duration * 1000);
+        
+        // Return a cleanup function that can cancel the timeout if needed
+        return () => {
+          clearTimeout(timer);
+          audioElement.pause();
+          audioElement.currentTime = 0;
+          audioElement.volume = safeVolume;
+        };
       }
     } catch (error) {
       console.error("Error playing sound:", error);
+      if (onComplete) onComplete();
     }
-  }, []);
+    
+    return () => {}; // Default cleanup function
+  }, [gameSettings.soundSettings.volume]);
   
-  // Simple goal sound function
-  const playGoalSound = useCallback(() => {
+  // Improved goal sound function
+  const playGoalSound = useCallback((onComplete?: () => void) => {
     console.log("Attempting to play goal sound");
-    playSound(goalAudioRef.current);
-  }, [playSound]);
+    
+    // Clean up any ongoing goal sound first to prevent conflicts
+    if (audioStateRef.current.goalFadeOutTimer) {
+      clearTimeout(audioStateRef.current.goalFadeOutTimer);
+      audioStateRef.current.goalFadeOutTimer = null;
+    }
+    
+    if (audioStateRef.current.goalFadeInterval) {
+      clearInterval(audioStateRef.current.goalFadeInterval);
+      audioStateRef.current.goalFadeInterval = null;
+    }
+    
+    // Set the flag that goal sound is playing
+    audioStateRef.current.goalPlaying = true;
+    
+    // Get duration from settings
+    const duration = gameSettings.soundSettings.maxDuration;
+    console.log(`Goal sound duration: ${duration} seconds`);
+    
+    // Save the original volume for reference
+    const originalVolume = isFinite(gameSettings.soundSettings.volume) ? 
+      Math.min(Math.max(gameSettings.soundSettings.volume, 0), 1) : 0.7;
+    
+    // Reset volume before playing to ensure it's at the right level
+    if (goalAudioRef.current) {
+      goalAudioRef.current.volume = originalVolume;
+    }
+    
+    // Play sound with specified duration and completion callback
+    playSound(goalAudioRef.current, duration, () => {
+      audioStateRef.current.goalPlaying = false;
+      
+      // Explicitly reset volume after playing
+      if (goalAudioRef.current) {
+        goalAudioRef.current.volume = originalVolume;
+      }
+      
+      if (onComplete) onComplete();
+    });
+    
+    // Implement fade-out if needed
+    if (gameSettings.soundSettings.fadeOutDuration > 0 && 
+        gameSettings.soundSettings.fadeOutDuration < duration && 
+        goalAudioRef.current) {
+      
+      const fadeStartTime = (duration - gameSettings.soundSettings.fadeOutDuration) * 1000;
+      
+      audioStateRef.current.goalFadeOutTimer = setTimeout(() => {
+        // Start fade out after specified delay
+        const fadeSteps = 20;
+        const fadeStepTime = (gameSettings.soundSettings.fadeOutDuration * 1000) / fadeSteps;
+        let currentStep = 0;
+        
+        audioStateRef.current.goalFadeInterval = setInterval(() => {
+          currentStep++;
+          if (currentStep >= fadeSteps || !goalAudioRef.current) {
+            if (audioStateRef.current.goalFadeInterval) {
+              clearInterval(audioStateRef.current.goalFadeInterval);
+              audioStateRef.current.goalFadeInterval = null;
+            }
+            
+            // Reset the volume when fade is complete
+            if (goalAudioRef.current) {
+              goalAudioRef.current.volume = originalVolume;
+            }
+          } else if (goalAudioRef.current) {
+            const newVolume = originalVolume * (1 - currentStep / fadeSteps);
+            goalAudioRef.current.volume = newVolume;
+          }
+        }, fadeStepTime);
+      }, fadeStartTime);
+    }
+  }, [playSound, gameSettings.soundSettings]);
   
   // Simple end horn function
   const playEndHorn = useCallback(() => {
     console.log("Attempting to play end horn");
-    playSound(hornAudioRef.current);
+    audioStateRef.current.endHornPlaying = true;
+    playSound(hornAudioRef.current, 3, () => {
+      audioStateRef.current.endHornPlaying = false;
+    });
   }, [playSound]);
   
   // Function to end the game when time runs out
@@ -454,7 +570,7 @@ const App: React.FC = () => {
     playEndHorn();
   }, [homeTeam.score, homeTeam.name, awayTeam.score, awayTeam.name, playEndHorn]);
   
-  // Function to end the game when goal limit is reached
+  // Improved function to end the game when goal limit is reached
   const endGameByGoal = useCallback((winner: string) => {
     console.log("Game ended by goal limit", winner);
     
@@ -464,60 +580,16 @@ const App: React.FC = () => {
       timerRef.current = null;
     }
     
-    // Update state immediately - this works fine with sounds playing
+    // Update state immediately
     setIsRunning(false);
     setGameEnded(true);
     setWinningTeam(winner);
+    
+    // In goal-limited mode, we only play the goal sound, not the end horn
+    // The goal sound is already playing from the incrementScore function
   }, []);
   
-  // Save settings to localStorage when they change
-  useEffect(() => {
-    try {
-      localStorage.setItem('gameSettings', JSON.stringify(gameSettings));
-    } catch (error) {
-      console.error("Error saving game settings:", error);
-    }
-  }, [gameSettings]);
-
-  // Update current time
-  useEffect(() => {
-    const updateCurrentTime = () => {
-      const now = new Date();
-      const hours = now.getHours().toString().padStart(2, '0');
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      setCurrentTime(`${hours}:${minutes}`);
-    };
-    
-    // Update once immediately
-    updateCurrentTime();
-    
-    // Update every minute
-    const timeInterval = setInterval(updateCurrentTime, 60000);
-    
-    return () => clearInterval(timeInterval);
-  }, []);
-
-  const toggleClock = () => {
-    setIsRunning(!isRunning);
-  };
-
-  const resetGame = () => {
-    setIsRunning(false);
-    
-    if (gameSettings.gameMode === GameMode.TIME_BASED) {
-      setMinutes(gameSettings.matchDuration);
-      setSeconds(0);
-    } else {
-      setElapsedMinutes(0);
-      setElapsedSeconds(0);
-    }
-    
-    setHomeTeam(prev => ({ ...prev, score: 0 }));
-    setAwayTeam(prev => ({ ...prev, score: 0 }));
-    setGameEnded(false);
-    setWinningTeam(null);
-  };
-
+  // Modified incrementScore function with better sound handling
   const incrementScore = (team: 'home' | 'away') => {
     if (gameEnded) return;
     
@@ -544,17 +616,21 @@ const App: React.FC = () => {
     }
     
     // Always play the goal sound
-    playGoalSound();
-    
-    // End the game if limit reached - will work even if sound is playing
     if (winner) {
-      // Store the winner in a local constant to avoid type issues with the setTimeout callback
-      const winnerName = winner; // This is guaranteed to be a string here
+      // This is a winning goal - ensure the sound plays FULLY before ending game
+      const winnerName = winner; // Local variable to avoid capture issues
       
-      // Small delay to ensure state is updated properly
-      setTimeout(() => {
-        endGameByGoal(winnerName);
-      }, 100);
+      // Play goal sound - even if another sound was playing (this ensures we hear the winning goal)
+      playGoalSound(() => {
+        // This callback runs after goal sound is done
+        console.log("Goal sound finished, now ending game");
+        setTimeout(() => {
+          endGameByGoal(winnerName);
+        }, 300); // Small additional delay for stability
+      });
+    } else {
+      // Regular goal, just play the sound
+      playGoalSound();
     }
   };
 
@@ -657,6 +733,78 @@ const App: React.FC = () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [isRunning, gameEnded, minutes, gameSettings.gameMode, endGameByTime]);
+
+  useEffect(() => {
+    const updateCurrentTime = () => {
+      const now = new Date();
+      const hours = now.getHours().toString().padStart(2, '0');
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      setCurrentTime(`${hours}:${minutes}`);
+    };
+    
+    // Update once immediately
+    updateCurrentTime();
+    
+    // Update every minute
+    const timeInterval = setInterval(updateCurrentTime, 60000);
+    
+    return () => clearInterval(timeInterval);
+  }, []);
+
+  const toggleClock = () => {
+    setIsRunning(prevState => !prevState);
+  };
+
+  const resetGame = () => {
+    // Stop the timer
+    setIsRunning(false);
+    
+    // Reset clock based on game mode
+    if (gameSettings.gameMode === GameMode.TIME_BASED) {
+      setMinutes(gameSettings.matchDuration);
+      setSeconds(0);
+      setEditMinutes(gameSettings.matchDuration.toString());
+      setEditSeconds('00');
+    } else {
+      setElapsedMinutes(0);
+      setElapsedSeconds(0);
+    }
+    
+    // Reset scores
+    setHomeTeam(prev => ({ ...prev, score: 0 }));
+    setAwayTeam(prev => ({ ...prev, score: 0 }));
+    
+    // Reset game state
+    setGameEnded(false);
+    setWinningTeam(null);
+    
+    // If editing clock, cancel that too
+    if (isEditingClock) {
+      setIsEditingClock(false);
+    }
+    
+    // Clean up any ongoing sounds
+    if (audioStateRef.current.goalFadeOutTimer) {
+      clearTimeout(audioStateRef.current.goalFadeOutTimer);
+      audioStateRef.current.goalFadeOutTimer = null;
+    }
+    
+    if (audioStateRef.current.goalFadeInterval) {
+      clearInterval(audioStateRef.current.goalFadeInterval);
+      audioStateRef.current.goalFadeInterval = null;
+    }
+    
+    // Reset audio elements
+    if (goalAudioRef.current) {
+      goalAudioRef.current.pause();
+      goalAudioRef.current.currentTime = 0;
+    }
+    
+    if (hornAudioRef.current) {
+      hornAudioRef.current.pause();
+      hornAudioRef.current.currentTime = 0;
+    }
+  };
 
   const getClockDisplay = () => {
     if (gameSettings.gameMode === GameMode.TIME_BASED) {
